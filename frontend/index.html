@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Title Insurance App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+  <script crossorigin src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+<body class="p-4">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const API = '/api';
+
+    function App() {
+      const [token, setToken] = React.useState(localStorage.getItem('token'));
+      const [orders, setOrders] = React.useState([]);
+      const [form, setForm] = React.useState({ propertyAddress: '', buyer: '', seller: '' });
+      const [login, setLogin] = React.useState({ email: '', password: '' });
+      const [error, setError] = React.useState('');
+
+      React.useEffect(() => {
+        if (token) {
+          fetch(`${API}/orders`, { headers: { Authorization: `Bearer ${token}` } })
+            .then(r => r.json()).then(setOrders);
+        }
+      }, [token]);
+
+      function handleLogin(e) {
+        e.preventDefault();
+        fetch(`${API}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(login)
+        })
+          .then(r => r.json())
+          .then(data => {
+            if (data.token) {
+              localStorage.setItem('token', data.token);
+              setToken(data.token);
+            } else {
+              setError(data.message);
+            }
+          });
+      }
+
+      function handleCreate(e) {
+        e.preventDefault();
+        fetch(`${API}/orders`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(form)
+        })
+          .then(r => r.json())
+          .then(order => setOrders([...orders, order]));
+      }
+
+      if (!token) {
+        return (
+          <form onSubmit={handleLogin} className="max-w-sm mx-auto space-y-2">
+            <h1 className="text-xl font-bold">Login</h1>
+            {error && <div className="text-red-500">{error}</div>}
+            <input className="border p-2 w-full" placeholder="Email" value={login.email} onChange={e => setLogin({ ...login, email: e.target.value })} />
+            <input className="border p-2 w-full" type="password" placeholder="Password" value={login.password} onChange={e => setLogin({ ...login, password: e.target.value })} />
+            <button className="bg-blue-500 text-white p-2 w-full" type="submit">Login</button>
+          </form>
+        );
+      }
+
+      return (
+        <div className="space-y-4">
+          <h1 className="text-xl font-bold">Orders</h1>
+          <ul className="space-y-2">
+            {orders.map(o => (
+              <li key={o._id} className="border p-2 flex justify-between">
+                <span>{o.propertyAddress}</span>
+                <span>{o.status}</span>
+              </li>
+            ))}
+          </ul>
+          <form onSubmit={handleCreate} className="space-y-2 max-w-md">
+            <input className="border p-2 w-full" placeholder="Property Address" value={form.propertyAddress} onChange={e => setForm({ ...form, propertyAddress: e.target.value })} />
+            <input className="border p-2 w-full" placeholder="Buyer" value={form.buyer} onChange={e => setForm({ ...form, buyer: e.target.value })} />
+            <input className="border p-2 w-full" placeholder="Seller" value={form.seller} onChange={e => setForm({ ...form, seller: e.target.value })} />
+            <button className="bg-green-500 text-white p-2" type="submit">Create Order</button>
+          </form>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
