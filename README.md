@@ -27,3 +27,23 @@ You can also parse a file directly using the parser module:
 ```bash
 python parser.py path/to/document.pdf
 ```
+
+## Full Stack Application
+
+A basic full stack example using Node.js, MongoDB and React is included in the `backend` and `frontend` folders.
+
+### Backend
+
+Install dependencies and start the API server:
+
+```bash
+cd backend
+npm install
+npm start
+```
+
+The server exposes REST endpoints under `/api` and uses JWT authentication. Set `MONGODB_URI` and `JWT_SECRET` environment variables as needed.
+
+### Frontend
+
+The frontend is a small React app served as static files. Open `frontend/index.html` in a browser after starting the backend to interact with the API.
